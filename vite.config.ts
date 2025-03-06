@@ -8,10 +8,10 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
-    port: 3501, // Changed from 3500 to 3501
-    host: true, // Allow connections from network
-    open: true, // Automatically open browser when starting
-    strictPort: false // Changed to false to allow fallback to another port if needed
+    port: 3501,
+    host: true,
+    open: true,
+    strictPort: false
   },
   build: {
     outDir: 'dist',
@@ -29,5 +29,5 @@ export default defineConfig({
       }
     }
   },
-  base: './' // Use relative paths instead of absolute
+  base: '/BookManager/' // Set base path to /BookManager/
 })
