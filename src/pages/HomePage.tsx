@@ -1,30 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, Row, Col, message, Space } from 'antd';
-import { PlusOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Typography, Button, Space } from 'antd';
+import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import BookList from '../components/BookList';
 import BookForm from '../components/BookForm';
 import FilterBar from '../components/FilterBar';
-import { Book, Filters, ColumnVisibility } from '../types';
-import { db, addBook, updateBook, deleteBook, getAllBooks } from '../db/database';
+import { Book, BookFilter, ColumnVisibility } from '../types';
+import { getAllBooks, addBook, updateBook, deleteBook } from '../db/database';
 
 const { Title } = Typography;
 
 const HomePage: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
-  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
-  const [isFormVisible, setIsFormVisible] = useState(false);
-  const [editingBook, setEditingBook] = useState<Book | undefined>(undefined);
-  const [sortBy, setSortBy] = useState<string>('title');
-  const [filters, setFilters] = useState<Filters>({
-    title: '',
-    author: '',
-    genre: '',
-    language: '',
-    readStatus: '',
-    bookType: '',
-    publisher: '',
-    favorite: false
-  });
+  const [loading, setLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [filters, setFilters] = useState<BookFilter>({});
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     favorite: true,
     title: true,
@@ -41,232 +31,102 @@ const HomePage: React.FC = () => {
   });
 
   useEffect(() => {
-    loadBooks();
-    
-    // Load saved column visibility preferences
-    const savedColumnVisibility = localStorage.getItem('columnVisibility');
-    if (savedColumnVisibility) {
-      setColumnVisibility(JSON.parse(savedColumnVisibility));
-    }
+    fetchBooks();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [books, filters, sortBy]);
-
-  const loadBooks = async () => {
+  const fetchBooks = async () => {
     try {
+      setLoading(true);
       const allBooks = await getAllBooks();
       setBooks(allBooks);
     } catch (error) {
       console.error('Error loading books:', error);
-      message.error('Failed to load books');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const applyFilters = () => {
-    let result = [...books];
-
-    // Apply text filters with support for multiple values (comma-separated)
-    if (filters.title) {
-      const titleTerms = filters.title.split(',').map(term => term.trim().toLowerCase());
-      result = result.filter(book => 
-        titleTerms.some(term => book.title.toLowerCase().includes(term))
-      );
-    }
-
-    if (filters.author) {
-      const authorTerms = filters.author.split(',').map(term => term.trim().toLowerCase());
-      result = result.filter(book => 
-        book.author && authorTerms.some(term => book.author?.toLowerCase().includes(term))
-      );
-    }
-
-    if (filters.publisher) {
-      const publisherTerms = filters.publisher.split(',').map(term => term.trim().toLowerCase());
-      result = result.filter(book => 
-        book.publisher && publisherTerms.some(term => book.publisher?.toLowerCase().includes(term))
-      );
-    }
-
-    if (filters.genre) {
-      const genreTerms = filters.genre.split(',');
-      result = result.filter(book => 
-        book.genre && genreTerms.includes(book.genre)
-      );
-    }
-
-    if (filters.language) {
-      const languageTerms = filters.language.split(',');
-      result = result.filter(book => 
-        languageTerms.includes(book.language)
-      );
-    }
-
-    if (filters.readStatus) {
-      const statusTerms = filters.readStatus.split(',');
-      result = result.filter(book => 
-        statusTerms.includes(book.readStatus)
-      );
-    }
-
-    if (filters.bookType) {
-      const typeTerms = filters.bookType.split(',');
-      result = result.filter(book => 
-        book.bookType && typeTerms.includes(book.bookType)
-      );
-    }
-
-    // Apply favorite filter
-    if (filters.favorite) {
-      result = result.filter(book => book.favorite);
-    }
-
-    // Apply sorting
-    result.sort((a, b) => {
-      const fieldA = a[sortBy as keyof Book];
-      const fieldB = b[sortBy as keyof Book];
-      
-      // Handle undefined values
-      if (fieldA === undefined && fieldB === undefined) return 0;
-      if (fieldA === undefined) return 1;
-      if (fieldB === undefined) return -1;
-      
-      // Handle string comparison
-      if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-        return fieldA.localeCompare(fieldB);
-      }
-      
-      // Handle number comparison
-      if (typeof fieldA === 'number' && typeof fieldB === 'number') {
-        return fieldA - fieldB;
-      }
-      
-      // Handle boolean comparison
-      if (typeof fieldA === 'boolean' && typeof fieldB === 'boolean') {
-        return fieldA === fieldB ? 0 : fieldA ? -1 : 1;
-      }
-      
-      return 0;
-    });
-
-    setFilteredBooks(result);
-  };
-
-  const handleAddBook = () => {
-    setEditingBook(undefined);
-    setIsFormVisible(true);
-  };
-
-  const handleEditBook = (book: Book) => {
-    setEditingBook(book);
-    setIsFormVisible(true);
-  };
-
-  const handleSaveBook = async (book: Book) => {
+  const handleAddBook = async (book: Book) => {
     try {
-      if (book.id) {
-        // Update existing book
-        await updateBook(book);
-        message.success('Book updated successfully');
-      } else {
-        // Add new book
-        await addBook(book);
-        message.success('Book added successfully');
-      }
-      
-      setIsFormVisible(false);
-      loadBooks();
+      await addBook(book);
+      fetchBooks();
+      setIsModalVisible(false);
     } catch (error) {
-      console.error('Error saving book:', error);
-      message.error('Failed to save book');
+      console.error('Error adding book:', error);
+    }
+  };
+
+  const handleUpdateBook = async (book: Book) => {
+    try {
+      await updateBook(book);
+      fetchBooks();
+      setIsModalVisible(false);
+      setEditingBook(null);
+    } catch (error) {
+      console.error('Error updating book:', error);
     }
   };
 
   const handleDeleteBook = async (id: number) => {
     try {
       await deleteBook(id);
-      message.success('Book deleted successfully');
-      loadBooks();
+      fetchBooks();
     } catch (error) {
       console.error('Error deleting book:', error);
-      message.error('Failed to delete book');
     }
   };
 
-  const handleToggleFavorite = async (book: Book) => {
-    try {
-      const updatedBook = { ...book, favorite: !book.favorite };
-      await updateBook(updatedBook);
-      message.success(updatedBook.favorite ? 'Added to favorites' : 'Removed from favorites');
-      loadBooks();
-    } catch (error) {
-      console.error('Error updating favorite status:', error);
-      message.error('Failed to update favorite status');
-    }
+  const handleEdit = (book: Book) => {
+    setEditingBook(book);
+    setIsModalVisible(true);
   };
 
-  const clearFilters = () => {
-    setFilters({
-      title: '',
-      author: '',
-      genre: '',
-      language: '',
-      readStatus: '',
-      bookType: '',
-      publisher: '',
-      favorite: false
-    });
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    setEditingBook(null);
   };
 
-  const handleColumnVisibilityChange = (newVisibility: ColumnVisibility) => {
-    setColumnVisibility(newVisibility);
+  const handleFilterChange = (newFilters: BookFilter) => {
+    setFilters(newFilters);
   };
 
-  const exportToCSV = () => {
-    // Only export visible columns and their data
-    const visibleColumns = Object.entries(columnVisibility)
-      .filter(([_, isVisible]) => isVisible)
-      .map(([column]) => column)
-      .filter(column => column !== 'actions' && column !== 'favorite'); // Exclude action buttons and favorite toggle
+  const handleClearFilters = () => {
+    setFilters({});
+  };
 
-    // Create header row
-    const headers = visibleColumns.map(column => {
-      // Convert camelCase to Title Case
-      return column
-        .replace(/([A-Z])/g, ' $1')
-        .replace(/^./, str => str.toUpperCase());
+  const handleExportCSV = () => {
+    // Implementation for CSV export
+    const headers = [
+      'Title',
+      'Author',
+      'Publisher',
+      'Publish Date',
+      'Genre',
+      'Language',
+      'Book Type',
+      'Read Status',
+      'Date of Reading',
+      'Rating',
+      'Favorite'
+    ].join(',');
+
+    const csvRows = books.map(book => {
+      return [
+        `"${book.title || ''}"`,
+        `"${book.author || ''}"`,
+        `"${book.publisher || ''}"`,
+        `"${book.publishDate || ''}"`,
+        `"${book.genre || ''}"`,
+        `"${book.language || ''}"`,
+        `"${book.bookType || ''}"`,
+        `"${book.readStatus || ''}"`,
+        `"${book.dateOfReading || ''}"`,
+        `"${book.rating || ''}"`,
+        `"${book.favorite ? 'Yes' : 'No'}"`
+      ].join(',');
     });
 
-    // Create CSV content
-    let csvContent = headers.join(',') + '\n';
-
-    // Add data rows
-    filteredBooks.forEach(book => {
-      const row = visibleColumns.map(column => {
-        const key = column as keyof Book;
-        const value = book[key];
-        
-        // Handle different value types
-        if (value === undefined || value === null) {
-          return '';
-        } else if (typeof value === 'boolean') {
-          return value ? 'Yes' : 'No';
-        } else if (key === 'rating') {
-          return value || '0';
-        } else {
-          // Escape quotes and wrap in quotes if the value contains a comma
-          const stringValue = String(value);
-          return stringValue.includes(',') 
-            ? `"${stringValue.replace(/"/g, '""')}"`
-            : stringValue;
-        }
-      });
-      
-      csvContent += row.join(',') + '\n';
-    });
-
-    // Create and download the CSV file
+    const csvContent = [headers, ...csvRows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -276,66 +136,83 @@ const HomePage: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    message.success('CSV file exported successfully');
   };
 
+  // Filter books based on current filters
+  const filteredBooks = books.filter(book => {
+    // Check each filter
+    for (const [key, value] of Object.entries(filters)) {
+      if (value && key in book) {
+        const bookValue = book[key as keyof Book];
+        
+        // Skip if the book doesn't have this property or it's null/undefined
+        if (bookValue === undefined || bookValue === null) {
+          return false;
+        }
+        
+        // Special case for favorite which is boolean
+        if (key === 'favorite') {
+          if (value === 'true' && !bookValue) return false;
+          if (value === 'false' && bookValue) return false;
+          continue;
+        }
+        
+        // For string values, check if the filter value is included in the book value
+        if (typeof bookValue === 'string' && typeof value === 'string') {
+          if (!bookValue.toLowerCase().includes(value.toLowerCase())) {
+            return false;
+          }
+        } 
+        // For exact matches (like select filters)
+        else if (bookValue !== value) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+
   return (
-    <div className="w-full">
-      <Row gutter={[16, 24]} align="middle" justify="space-between" className="w-full">
-        <Col>
-          <Title level={2}>My Book Collection</Title>
-        </Col>
-        <Col>
-          <Space size="middle">
-            <Button 
-              icon={<DownloadOutlined />} 
-              onClick={exportToCSV}
-            >
-              Export to CSV
-            </Button>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              onClick={handleAddBook}
-              size="large"
-            >
-              Add Book
-            </Button>
-          </Space>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]} className="mb-4 w-full">
-        <Col span={24}>
-          <FilterBar 
-            filters={filters} 
-            setFilters={setFilters} 
-            clearFilters={clearFilters}
-            columnVisibility={columnVisibility}
-            onColumnVisibilityChange={handleColumnVisibilityChange}
-            allBooks={books} // Pass all books for autocomplete suggestions
-          />
-        </Col>
-      </Row>
-
-      <div className="w-full">
-        <BookList 
-          books={filteredBooks}
-          onEdit={handleEditBook}
-          onDelete={handleDeleteBook}
-          onToggleFavorite={handleToggleFavorite}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          columnVisibility={columnVisibility}
-        />
+    <div className="page-content">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <Space>
+          <Button 
+            icon={<DownloadOutlined />} 
+            onClick={handleExportCSV}
+          >
+            Export to CSV
+          </Button>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            onClick={() => setIsModalVisible(true)}
+          >
+            Add Book
+          </Button>
+        </Space>
       </div>
 
+      <FilterBar 
+        filters={filters} 
+        onFilterChange={handleFilterChange} 
+        onClearFilters={handleClearFilters}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={setColumnVisibility}
+      />
+
+      <BookList 
+        books={filteredBooks} 
+        loading={loading} 
+        onEdit={handleEdit} 
+        onDelete={handleDeleteBook}
+        columnVisibility={columnVisibility}
+      />
+
       <BookForm
-        book={editingBook}
-        onSave={handleSaveBook}
-        onCancel={() => setIsFormVisible(false)}
-        visible={isFormVisible}
+        visible={isModalVisible}
+        onCancel={handleCancel}
+        onSubmit={editingBook ? handleUpdateBook : handleAddBook}
+        initialValues={editingBook}
       />
     </div>
   );

@@ -1,7 +1,7 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { Layout as AntLayout, Button, Typography, theme } from 'antd';
-import { SunIcon, MoonIcon, BookOpenIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Layout as AntLayout, Button, Typography, theme, Tabs } from 'antd';
+import { SunIcon, MoonIcon, BookOpenIcon, BarChart2Icon, BookIcon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 const { Header, Content, Footer } = AntLayout;
@@ -10,6 +10,11 @@ const { Title } = Typography;
 const Layout: React.FC = () => {
   const { toggleTheme, isDark } = useTheme();
   const { token } = theme.useToken();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Determine active tab based on current path
+  const activeKey = location.pathname === '/dashboard' ? 'dashboard' : 'books';
 
   const headerStyle = {
     background: `linear-gradient(90deg, #4a1d96 0%, #7e22ce 50%, #6b21a8 100%)`,
@@ -28,9 +33,9 @@ const Layout: React.FC = () => {
   };
 
   const contentStyle = {
-    padding: '24px',
+    padding: '24px 0',
     minHeight: 'calc(100vh - 134px)', // 64px header + 70px footer
-    marginTop: '64px', // Header height
+    marginTop: '124px', // Header height + tabs height + extra spacing
     width: '100%',
     position: 'relative' as 'relative',
     zIndex: 1
@@ -48,15 +53,59 @@ const Layout: React.FC = () => {
     zIndex: 1
   };
 
+  const tabsContainerStyle = {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'flex-start',
+    background: isDark ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+    backdropFilter: 'blur(5px)',
+    borderBottom: '1px solid rgba(140, 140, 140, 0.2)',
+    position: 'fixed' as 'fixed',
+    top: '64px',
+    left: 0,
+    right: 0,
+    zIndex: 999,
+    padding: '0 24px'
+  };
+
+  const handleTabChange = (key: string) => {
+    if (key === 'books') {
+      navigate('/');
+    } else if (key === 'dashboard') {
+      navigate('/dashboard');
+    }
+  };
+
+  const items = [
+    {
+      key: 'books',
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <BookIcon size={16} />
+          Books
+        </span>
+      ),
+    },
+    {
+      key: 'dashboard',
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <BarChart2Icon size={16} />
+          Dashboard
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <AntLayout style={{ minHeight: '100vh', width: '100%', position: 'relative' }}>
+    <AntLayout className="layout-container">
       {/* Animated background */}
       <div className="animated-background"></div>
       
       <Header style={headerStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <BookOpenIcon size={24} color="white" />
-          <Title level={4} style={{ margin: 0, color: 'white' }}>Book Manager</Title>
+          <Title level={4} style={{ margin: 0, color: 'white' }}>Book Database</Title>
         </div>
         <Button
           type="text"
@@ -66,26 +115,27 @@ const Layout: React.FC = () => {
           style={{ color: 'white' }}
         />
       </Header>
+      
+      <div style={tabsContainerStyle}>
+        <Tabs 
+          activeKey={activeKey} 
+          onChange={handleTabChange} 
+          items={items}
+          size="large"
+          style={{ marginBottom: 0, width: '100%' }}
+          className="full-width-tabs"
+        />
+      </div>
+      
       <Content style={contentStyle}>
-        <div 
-          style={{ 
-            width: '100%', 
-            maxWidth: '100%', 
-            margin: '0 auto',
-            background: isDark 
-              ? 'rgba(0, 0, 0, 0.7)' 
-              : 'rgba(255, 255, 255, 0.7)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-          }}
-        >
+        <div className="content-container">
           <Outlet />
         </div>
       </Content>
       <Footer style={footerStyle}>
-        © 2025 Local Book Management Application
+        <div className="content-container">
+          © 2025 Personal Database Application by Atlantis
+        </div>
       </Footer>
     </AntLayout>
   );

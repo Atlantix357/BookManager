@@ -291,6 +291,7 @@ const BookList: React.FC<BookListProps> = ({
           locale={{ emptyText: 'No books found. Add your first book!' }}
           style={{ width: '100%' }}
           scroll={{ x: 'max-content' }}
+          className="book-table"
         />
       </div>
       

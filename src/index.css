@@ -2,185 +2,208 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add any custom styles here */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  min-width: 320px;
+  min-height: 100vh;
   overflow-x: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-    'Noto Color Emoji';
 }
 
-html, #root {
+#root {
   width: 100%;
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-container {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
   overflow-x: hidden;
 }
 
-/* Animated background */
+.content-container {
+  width: 100%;
+  max-width: 100%;
+  padding-left: 24px;
+  padding-right: 24px;
+  margin: 0 auto;
+}
+
+.page-content {
+  width: 100%;
+}
+
 .animated-background {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
-  background: linear-gradient(40deg, #0f172a, #1e1b4b);
+  background: linear-gradient(-45deg, #1a237e, #283593, #3949ab, #1e3a8a);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Dashboard specific styles */
+.dashboard-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.statistic-card {
+  height: 100%;
+  transition: all 0.3s;
+}
+
+.statistic-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card {
+  height: 100%;
+}
+
+.dashboard-container .ant-card {
+  border-radius: 10px;
   overflow: hidden;
 }
 
-.animated-background::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(236, 72, 153, 0.3) 0%, transparent 25%),
-    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.3) 0%, transparent 25%),
-    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 30%);
-  animation: gradientAnimation 15s ease infinite;
-  transform-origin: center center;
-  opacity: 0.7;
+.dashboard-container .ant-statistic-title {
+  font-size: 16px;
+  margin-bottom: 8px;
 }
 
-.animated-background::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(circle at 75% 25%, rgba(244, 63, 94, 0.2) 0%, transparent 25%),
-    radial-gradient(circle at 25% 75%, rgba(168, 85, 247, 0.2) 0%, transparent 25%),
-    radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.2) 0%, transparent 30%);
-  animation: gradientAnimation 20s ease infinite;
-  animation-delay: -5s;
-  transform-origin: center center;
-  opacity: 0.7;
+.dashboard-container .ant-statistic-content {
+  font-size: 24px;
 }
 
-@keyframes gradientAnimation {
-  0% {
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.1);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-  }
+.dashboard-container .ant-progress {
+  margin-top: 10px;
 }
 
-/* Fix for Ant Design table layout */
-.ant-table-wrapper {
-  width: 100%;
+.dashboard-container .ant-list-item {
+  padding: 12px 0;
 }
 
-.ant-table-wrapper .ant-table {
-  width: 100%;
+.dashboard-container .ant-card-head {
+  border-bottom: 1px solid rgba(140, 140, 140, 0.2);
 }
 
-.ant-table-wrapper .ant-table-tbody > tr > td {
-  word-break: break-word;
+.mb-6 {
+  margin-bottom: 24px;
 }
 
-/* Custom scrollbar for better UX */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Fix for Ant Design components */
+.ant-layout {
+  width: 100% !important;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+.ant-tabs {
+  width: 100% !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+.ant-tabs-nav {
+  width: 100% !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
+.ant-layout-footer {
+  width: 100% !important;
 }
 
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-track {
-  background: #1f1f1f;
+.full-width-tabs {
+  width: 100% !important;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #555;
+.full-width-tabs .ant-tabs-nav-wrap {
+  width: 100% !important;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #777;
+.ant-tabs-nav::before {
+  width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
 }
 
-/* Dark mode adjustments for the animated background */
-.dark .animated-background {
-  background: linear-gradient(40deg, #0f172a, #1e1b4b);
+/* Remove the content container wrapper */
+.ant-layout-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
-/* Light mode adjustments for the animated background */
-body:not(.dark) .animated-background {
-  background: linear-gradient(40deg, #f8fafc, #e0e7ff);
+/* Enhanced table header styles */
+.book-table .ant-table-thead > tr > th {
+  background-color: #4a1d96 !important;
+  color: white !important;
+  font-weight: 600 !important;
+  padding: 12px 16px !important;
+  border-bottom: 2px solid #6b21a8 !important;
 }
 
-/* Adjust table styles for better visibility with the new background */
-.ant-table {
-  background: transparent !important;
+/* For dark mode */
+.dark .book-table .ant-table-thead > tr > th {
+  background-color: #6b21a8 !important;
+  color: white !important;
+  border-bottom: 2px solid #8b5cf6 !important;
 }
 
-/* Light purple gradient for table headers - static vertical (top to bottom) */
-.ant-table-thead > tr > th {
-  background: linear-gradient(to bottom, #c4b5fd, #a78bfa, #8b5cf6) !important;
-  color: #fff !important;
-  font-weight: 500 !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
-  border-bottom: none !important;
-  position: relative !important;
-  overflow: hidden !important;
-  backdrop-filter: blur(4px) !important;
+/* Hover effect for table headers */
+.book-table .ant-table-thead > tr > th:hover {
+  background-color: #7e22ce !important;
 }
 
-/* Dark mode table header adjustments */
-.dark .ant-table-thead > tr > th {
-  background: linear-gradient(to bottom, #7c3aed, #8b5cf6, #6d28d9) !important;
+/* Adjust table cell padding */
+.book-table .ant-table-tbody > tr > td {
+  padding: 12px 16px !important;
 }
 
-.ant-table-tbody > tr > td {
-  background: transparent !important;
+/* Zebra striping for rows */
+.book-table .ant-table-tbody > tr:nth-child(odd) {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
-.ant-table-tbody > tr:hover > td {
-  background: rgba(0, 0, 0, 0.05) !important;
+.dark .book-table .ant-table-tbody > tr:nth-child(odd) {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
-.dark .ant-table-tbody > tr:hover > td {
-  background: rgba(255, 255, 255, 0.05) !important;
+/* Hover effect for rows */
+.book-table .ant-table-tbody > tr:hover > td {
+  background-color: rgba(74, 29, 150, 0.05) !important;
 }
 
-/* Adjust form elements for better visibility */
-.ant-form-item-label > label {
-  font-weight: 500;
-}
-
-.dark .ant-form-item-label > label {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* Adjust buttons for better visibility */
-.ant-btn-primary {
-  background: linear-gradient(90deg, #4a1d96, #7e22ce) !important;
-  border: none !important;
-}
-
-.ant-btn-primary:hover {
-  background: linear-gradient(90deg, #6b21a8, #9333ea) !important;
+.dark .book-table .ant-table-tbody > tr:hover > td {
+  background-color: rgba(139, 92, 246, 0.1) !important;
 }

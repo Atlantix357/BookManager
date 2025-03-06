@@ -1,33 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import Sitemap from 'vite-plugin-sitemap'
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-  },
+  plugins: [
+    react(),
+    Sitemap({
+      hostname: 'https://image-metadata-manager.onrender.com',
+      dynamicRoutes: ['/']
+    })
+  ],
   server: {
-    port: 3501,
-    host: true,
-    open: true,
-    strictPort: false
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: ["image-metadata-manager.onrender.com"]
   },
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
-    emptyOutDir: true,
-    sourcemap: false,
-    minify: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          dexie: ['dexie']
-        }
-      }
-    }
+    sourcemap: true,
   },
-  base: '/BookManager/' // Set base path to /BookManager/
 })
