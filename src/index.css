@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add any custom styles here */
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+}
+
+html, #root {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Animated background */
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background: linear-gradient(40deg, #0f172a, #1e1b4b);
+  overflow: hidden;
+}
+
+.animated-background::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(236, 72, 153, 0.3) 0%, transparent 25%),
+    radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.3) 0%, transparent 25%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 30%);
+  animation: gradientAnimation 15s ease infinite;
+  transform-origin: center center;
+  opacity: 0.7;
+}
+
+.animated-background::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 75% 25%, rgba(244, 63, 94, 0.2) 0%, transparent 25%),
+    radial-gradient(circle at 25% 75%, rgba(168, 85, 247, 0.2) 0%, transparent 25%),
+    radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.2) 0%, transparent 30%);
+  animation: gradientAnimation 20s ease infinite;
+  animation-delay: -5s;
+  transform-origin: center center;
+  opacity: 0.7;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* Fix for Ant Design table layout */
+.ant-table-wrapper {
+  width: 100%;
+}
+
+.ant-table-wrapper .ant-table {
+  width: 100%;
+}
+
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  word-break: break-word;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #1f1f1f;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Dark mode adjustments for the animated background */
+.dark .animated-background {
+  background: linear-gradient(40deg, #0f172a, #1e1b4b);
+}
+
+/* Light mode adjustments for the animated background */
+body:not(.dark) .animated-background {
+  background: linear-gradient(40deg, #f8fafc, #e0e7ff);
+}
+
+/* Adjust table styles for better visibility with the new background */
+.ant-table {
+  background: transparent !important;
+}
+
+/* Light purple gradient for table headers - static vertical (top to bottom) */
+.ant-table-thead > tr > th {
+  background: linear-gradient(to bottom, #c4b5fd, #a78bfa, #8b5cf6) !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+  border-bottom: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Dark mode table header adjustments */
+.dark .ant-table-thead > tr > th {
+  background: linear-gradient(to bottom, #7c3aed, #8b5cf6, #6d28d9) !important;
+}
+
+.ant-table-tbody > tr > td {
+  background: transparent !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.dark .ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Adjust form elements for better visibility */
+.ant-form-item-label > label {
+  font-weight: 500;
+}
+
+.dark .ant-form-item-label > label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Adjust buttons for better visibility */
+.ant-btn-primary {
+  background: linear-gradient(90deg, #4a1d96, #7e22ce) !important;
+  border: none !important;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(90deg, #6b21a8, #9333ea) !important;
+}
