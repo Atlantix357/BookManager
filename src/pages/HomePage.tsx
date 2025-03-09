@@ -1,40 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Button, Space } from 'antd';
-import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Tabs, Typography, Flex, Card, Spin, Empty, Space } from 'antd';
+import { PlusOutlined, DownloadOutlined } from '@ant-design/icons';
 import BookList from '../components/BookList';
 import BookForm from '../components/BookForm';
 import FilterBar from '../components/FilterBar';
-import { Book, BookFilter, ColumnVisibility } from '../types';
-import { getAllBooks, addBook, updateBook, deleteBook } from '../db/database';
+import { Book, Filters, ColumnVisibility } from '../types';
+import { db, addBook, updateBook, deleteBook, getAllBooks } from '../db/database';
 
 const { Title } = Typography;
+const { TabPane } = Tabs;
+
+const defaultFilters: Filters = {
+  title: '',
+  author: '',
+  genre: '',
+  language: '',
+  readStatus: '',
+  bookType: '',
+  publisher: '',
+  favorite: false
+};
+
+const defaultColumnVisibility: ColumnVisibility = {
+  favorite: true,
+  title: true,
+  author: true,
+  publisher: true,
+  publishDate: true,
+  genre: true,
+  language: true,
+  bookType: true,
+  readStatus: true,
+  dateOfReading: true,
+  rating: true,
+  actions: true
+};
 
 const HomePage: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingBook, setEditingBook] = useState<Book | null>(null);
-  const [filters, setFilters] = useState<BookFilter>({});
-  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
-    favorite: true,
-    title: true,
-    author: true,
-    publisher: true,
-    publishDate: true,
-    genre: true,
-    language: true,
-    bookType: true,
-    readStatus: true,
-    dateOfReading: true,
-    rating: true,
-    actions: true
-  });
+  const [selectedBook, setSelectedBook] = useState<Book | undefined>(undefined);
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [sortBy, setSortBy] = useState<string>('title');
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>(defaultColumnVisibility);
 
   useEffect(() => {
-    fetchBooks();
+    loadBooks();
   }, []);
 
-  const fetchBooks = async () => {
+  const loadBooks = async () => {
     try {
       setLoading(true);
       const allBooks = await getAllBooks();
@@ -46,173 +61,218 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleAddBook = async (book: Book) => {
-    try {
-      await addBook(book);
-      fetchBooks();
-      setIsModalVisible(false);
-    } catch (error) {
-      console.error('Error adding book:', error);
-    }
+  const handleAddBook = () => {
+    setSelectedBook(undefined);
+    setIsFormVisible(true);
   };
 
-  const handleUpdateBook = async (book: Book) => {
+  const handleEditBook = (book: Book) => {
+    setSelectedBook(book);
+    setIsFormVisible(true);
+  };
+
+  const handleSaveBook = async (book: Book) => {
     try {
-      await updateBook(book);
-      fetchBooks();
-      setIsModalVisible(false);
-      setEditingBook(null);
+      if (book.id) {
+        await updateBook(book);
+      } else {
+        await addBook(book);
+      }
+      await loadBooks();
+      setIsFormVisible(false);
     } catch (error) {
-      console.error('Error updating book:', error);
+      console.error('Error saving book:', error);
     }
   };
 
   const handleDeleteBook = async (id: number) => {
     try {
       await deleteBook(id);
-      fetchBooks();
+      await loadBooks();
     } catch (error) {
       console.error('Error deleting book:', error);
     }
   };
 
-  const handleEdit = (book: Book) => {
-    setEditingBook(book);
-    setIsModalVisible(true);
+  const handleToggleFavorite = async (book: Book) => {
+    try {
+      const updatedBook = { ...book, favorite: !book.favorite };
+      await updateBook(updatedBook);
+      await loadBooks();
+    } catch (error) {
+      console.error('Error updating favorite status:', error);
+    }
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
-    setEditingBook(null);
-  };
-
-  const handleFilterChange = (newFilters: BookFilter) => {
+  const handleFilterChange = (newFilters: Filters) => {
     setFilters(newFilters);
   };
 
-  const handleClearFilters = () => {
-    setFilters({});
+  const handleColumnVisibilityChange = (newVisibility: ColumnVisibility) => {
+    setColumnVisibility(newVisibility);
   };
 
-  const handleExportCSV = () => {
-    // Implementation for CSV export
+  const exportToCSV = () => {
+    if (books.length === 0) return;
+
+    // Create CSV content
     const headers = [
       'Title',
       'Author',
       'Publisher',
-      'Publish Date',
+      'Published',
       'Genre',
       'Language',
       'Book Type',
-      'Read Status',
-      'Date of Reading',
+      'Status',
+      'Date Read',
       'Rating',
-      'Favorite'
+      'Favorite',
+      'Comment'
     ].join(',');
 
-    const csvRows = books.map(book => {
-      return [
-        `"${book.title || ''}"`,
-        `"${book.author || ''}"`,
-        `"${book.publisher || ''}"`,
-        `"${book.publishDate || ''}"`,
-        `"${book.genre || ''}"`,
-        `"${book.language || ''}"`,
-        `"${book.bookType || ''}"`,
-        `"${book.readStatus || ''}"`,
-        `"${book.dateOfReading || ''}"`,
-        `"${book.rating || ''}"`,
-        `"${book.favorite ? 'Yes' : 'No'}"`
-      ].join(',');
-    });
+    const rows = books.map(book => [
+      `"${book.title.replace(/"/g, '""')}"`,
+      `"${(book.author || '').replace(/"/g, '""')}"`,
+      `"${(book.publisher || '').replace(/"/g, '""')}"`,
+      `"${(book.publishDate || '').replace(/"/g, '""')}"`,
+      `"${(book.genre || '').replace(/"/g, '""')}"`,
+      `"${(book.language || '').replace(/"/g, '""')}"`,
+      `"${(book.bookType || '').replace(/"/g, '""')}"`,
+      `"${(book.readStatus || '').replace(/"/g, '""')}"`,
+      `"${(book.dateOfReading || '').replace(/"/g, '""')}"`,
+      book.rating || 0,
+      book.favorite ? 'Yes' : 'No',
+      `"${(book.comment || '').replace(/"/g, '""')}"`
+    ].join(','));
 
-    const csvContent = [headers, ...csvRows].join('\n');
+    const csvContent = [headers, ...rows].join('\n');
+    
+    // Create a blob and download link
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', 'books.csv');
+    link.setAttribute('download', 'book_collection.csv');
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // Filter books based on current filters
   const filteredBooks = books.filter(book => {
-    // Check each filter
-    for (const [key, value] of Object.entries(filters)) {
-      if (value && key in book) {
-        const bookValue = book[key as keyof Book];
-        
-        // Skip if the book doesn't have this property or it's null/undefined
-        if (bookValue === undefined || bookValue === null) {
-          return false;
-        }
-        
-        // Special case for favorite which is boolean
-        if (key === 'favorite') {
-          if (value === 'true' && !bookValue) return false;
-          if (value === 'false' && bookValue) return false;
-          continue;
-        }
-        
-        // For string values, check if the filter value is included in the book value
-        if (typeof bookValue === 'string' && typeof value === 'string') {
-          if (!bookValue.toLowerCase().includes(value.toLowerCase())) {
-            return false;
-          }
-        } 
-        // For exact matches (like select filters)
-        else if (bookValue !== value) {
-          return false;
-        }
-      }
+    // Filter by title
+    if (filters.title && !book.title.toLowerCase().includes(filters.title.toLowerCase())) {
+      return false;
     }
+    
+    // Filter by author
+    if (filters.author && (!book.author || !book.author.toLowerCase().includes(filters.author.toLowerCase()))) {
+      return false;
+    }
+    
+    // Filter by genre
+    if (filters.genre && book.genre !== filters.genre) {
+      return false;
+    }
+    
+    // Filter by language
+    if (filters.language && book.language !== filters.language) {
+      return false;
+    }
+    
+    // Filter by read status
+    if (filters.readStatus && book.readStatus !== filters.readStatus) {
+      return false;
+    }
+    
+    // Filter by book type
+    if (filters.bookType && book.bookType !== filters.bookType) {
+      return false;
+    }
+    
+    // Filter by publisher
+    if (filters.publisher && (!book.publisher || !book.publisher.toLowerCase().includes(filters.publisher.toLowerCase()))) {
+      return false;
+    }
+    
+    // Filter by favorite
+    if (filters.favorite && !book.favorite) {
+      return false;
+    }
+    
     return true;
+  });
+
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    if (sortBy === 'title') {
+      return a.title.localeCompare(b.title);
+    } else if (sortBy === 'author') {
+      return (a.author || '').localeCompare(b.author || '');
+    } else if (sortBy === 'dateOfReading') {
+      return (a.dateOfReading || '').localeCompare(b.dateOfReading || '');
+    } else if (sortBy === 'rating') {
+      return (b.rating || 0) - (a.rating || 0);
+    }
+    return 0;
   });
 
   return (
     <div className="page-content">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <Flex justify="end" align="center" className="mb-6">
         <Space>
           <Button 
             icon={<DownloadOutlined />} 
-            onClick={handleExportCSV}
+            onClick={exportToCSV}
           >
             Export to CSV
           </Button>
           <Button 
             type="primary" 
             icon={<PlusOutlined />} 
-            onClick={() => setIsModalVisible(true)}
+            onClick={handleAddBook}
+            size="large"
           >
             Add Book
           </Button>
         </Space>
-      </div>
+      </Flex>
 
       <FilterBar 
         filters={filters} 
-        onFilterChange={handleFilterChange} 
-        onClearFilters={handleClearFilters}
+        setFilters={setFilters} 
+        clearFilters={() => setFilters(defaultFilters)}
         columnVisibility={columnVisibility}
-        onColumnVisibilityChange={setColumnVisibility}
+        onColumnVisibilityChange={handleColumnVisibilityChange}
+        allBooks={books}
       />
 
-      <BookList 
-        books={filteredBooks} 
-        loading={loading} 
-        onEdit={handleEdit} 
-        onDelete={handleDeleteBook}
-        columnVisibility={columnVisibility}
-      />
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+          <Spin size="large" />
+        </div>
+      ) : books.length === 0 ? (
+        <Empty 
+          description="Your book collection is empty. Start by adding your first book!" 
+          style={{ padding: '40px' }}
+        />
+      ) : (
+        <BookList 
+          books={sortedBooks}
+          onEdit={handleEditBook}
+          onDelete={handleDeleteBook}
+          onToggleFavorite={handleToggleFavorite}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          columnVisibility={columnVisibility}
+        />
+      )}
 
       <BookForm
-        visible={isModalVisible}
-        onCancel={handleCancel}
-        onSubmit={editingBook ? handleUpdateBook : handleAddBook}
-        initialValues={editingBook}
+        book={selectedBook}
+        onSave={handleSaveBook}
+        onCancel={() => setIsFormVisible(false)}
+        visible={isFormVisible}
       />
     </div>
   );
